@@ -82,14 +82,13 @@ pc_initdata(
     if (xval <= 0.1 && yval <= 1.2) {
         // Burned / just water
         //massfrac[N2_ID] = 0.7451;
-        massfrac[N2_ID] = 0.0;
+        massfrac[N2_ID] = 0.7451;
         massfrac[H_ID] = 0.0;
-        massfrac[O2_ID] = 0.0;
-        massfrac[O_ID] = 0.0;
+        massfrac[O2_ID] = 0.2264;
+        massfrac[O_ID] = 0.0;         
         massfrac[OH_ID] = 0.0;
-        massfrac[H2_ID] = 0.0;
-        //massfrac[H2O_ID] = 0.2549;
-        massfrac[H2O_ID] = 1.0;
+        massfrac[H2_ID] = 0.0285;
+        massfrac[H2O_ID] = 0.0;
         massfrac[HO2_ID] =  0.0;
         massfrac[H2O2_ID] = 0.0;
         amrex::Real sum = 0.0;
@@ -282,8 +281,8 @@ if (idir == 1) {
       amrex::Real x_val = x[0];
       // we assume pressure on the outer boundary is equal to the reactant pressure (1 atm)
       // amrex::Real p_ext = prob_parm.p_outlet;
-      amrex::Real ind_pres = x[0]/geomdata.ProbHi(0);
       amrex::Real p_ext = prob_parm.p_outlet;
+      amrex::Real relax = prob_parm.relax;
       amrex::Real c0;
       // initialize mass fractions
       for (int n = 0; n < NUM_SPECIES; n++) {
@@ -303,7 +302,9 @@ if (idir == 1) {
         gamma = Cp/Cv;
         // calculate pressure on the inside from known values
         eos.RTY2P(s_int[URHO], s_int[UTEMP], massfrac_int, p_int);
-        
+      // else if (p_int/p_ext > 2) {
+      //    p_ext = prob_parm.p_outlet * 2;
+      //  }
         // calculate stagnation speed of sound, density, and temperature
         amrex::Real R = Cp - Cv;
         amrex::Real mach = vel / c0;

@@ -22,6 +22,13 @@ amrex_probinit(
   pp.query("equiv_ratio", PeleC::h_prob_parm_device->equiv_ratio);
   pp.query("reac_temp", PeleC::h_prob_parm_device->reac_temp);
   pp.query("reac_pres", PeleC::h_prob_parm_device->reac_pres);
+  pp.query("inj_p0", PeleC::h_prob_parm_device->inj_p0);
+  pp.query("inj_t0", PeleC::h_prob_parm_device->inj_t0);
+  pp.query("inject_fuel", PeleC::h_prob_parm_device->inject_fuel);
+  pp.query("num_inlet", PeleC::h_prob_parm_device->num_inlet);
+  pp.query("inj_R", PeleC::h_prob_parm_device->inj_R);
+  pp.query("p_outlet", PeleC::h_prob_parm_device->p_outlet);
+  pp.query("relax", PeleC::h_prob_parm_device->relax);
 }
 }
 
