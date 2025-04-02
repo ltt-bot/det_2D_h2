@@ -1,7 +1,7 @@
 # ------------------  INPUTS TO MAIN PROGRAM  -------------------
 stop_time = 0.0015       # simulation time (seconds)
 # max_step = -1          # number of coarse steps after which to stop
-max_wall_time = 0.9     # wall clock time (hours)
+max_wall_time = 0.49     # wall clock time (hours)
 #amr.restart      = ../../../../../../scratch/gpfs/MUELLER/ltt/Hydrogen/2D/chk/2_atm/chk_h56344
 
 
@@ -23,14 +23,14 @@ amr.blocking_factor  =  8
 # Interior, UserBC, Symmetry, SlipWall, NoSlipWall
 # >>>>>>>>>>>>>  BC KEYWORDS <<<<<<<<<<<<<<<<<<<<<<
 pelec.lo_bc       =  "Interior"  "UserBC"
-pelec.hi_bc       =  "Interior"  "FOExtrap"
+pelec.hi_bc       =  "Interior"  "UserBC"
 
 # WHICH PHYSICS
 pelec.do_hydro = 1
-pelec.diffuse_vel = 0
-pelec.diffuse_temp = 0
-pelec.diffuse_spec = 0
-pelec.diffuse_enth = 0
+pelec.diffuse_vel = 1
+pelec.diffuse_temp = 1
+pelec.diffuse_spec = 1
+pelec.diffuse_enth = 1
 pelec.do_react = 1
 pelec.do_mol = 1
 pelec.ppm_type = 1
@@ -61,12 +61,12 @@ amr.max_grid_size   = 16
 
 # CHECKPOINT FILES
 amr.checkpoint_files_output = 1
-amr.check_file      = ../../../../../../scratch/gpfs/MUELLER/ltt/Hydrogen/2D/chk/2_atm/chk_h      # root name of checkpoint file
+amr.check_file      = ../../../../../../scratch/gpfs/MUELLER/ltt/Hydrogen/2D/chk/60_inlet/chk_h      # root name of checkpoint file
 amr.check_int       = 10000        # number of timesteps between checkpoints
 
 # PLOTFILES
 amr.plot_files_output = 1
-amr.plot_file       = ../../../../../../scratch/gpfs/MUELLER/ltt/Hydrogen/2D/plt/2_atm/plt_h    # root name of plotfile
+amr.plot_file       = ../../../../../../scratch/gpfs/MUELLER/ltt/Hydrogen/2D/plt/60_inlet/plt_h    # root name of plotfile
 amr.plot_int        = 2000        # number of timesteps between plotfiles
 amr.plot_vars  =  density Temp
 amr.derive_plot_vars = x_velocity y_velocity z_velocity magvel magvort pressure eint
@@ -87,7 +87,7 @@ prob.equiv_ratio = 1.0
 tagging.dengrad = 3e-2         # gradient of density value
 tagging.max_velgrad_lev = 3    # maximum level at which to use density for tagging
 
-tagging.pressgrad = 1.0e5;    # gradient of pressure value
+tagging.pressgrad = 1.0e6;    # gradient of pressure value
 tagging.max_pressgrad_lev = 3    # maximum level at which to use density for tagging
 
 tagging.tempgrad = 1300

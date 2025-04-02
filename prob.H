@@ -184,10 +184,10 @@ bcnormal(
         amrex::Real x_val = x[0];
         amrex::Real eint;
         // this is kinda like skipping a time step I think actually - better to just let it default to wall
-        // if (x_val<0) {
-        //   x_val = max_xval + x_val;
-        // }
-         if ((fmod(abs(x_val), wall_len*5) > wall_len*2)) {
+         //if (x_val<0) {
+         //  x_val = max_xval + x_val;
+         //}
+         if ((fmod(abs(x_val), wall_len*5) > wall_len*2) && (x_val > 0)) {
           auto eos = pele::physics::PhysicsType::eos();
           amrex::Real p_int;
           amrex::Real massfrac_int[NUM_SPECIES] = {0.0};
@@ -200,7 +200,7 @@ bcnormal(
           amrex::Real vx_in = 0.0;
           amrex::Real vy_in = 0.0;
           amrex::Real vz_in = 0.0;
-          amrex::Real rho = s_ext[URHO];
+          amrex::Real rho;
 
           for (int n = 0; n < NUM_SPECIES; n++) {
             massfrac_int[n] = s_int[UFS + n] / s_int[URHO];
@@ -218,13 +218,22 @@ bcnormal(
           p_cr = inj_p0*pow(2/(gamma+1),(gamma)/(gamma-1));
           // no injection
           if (p_int >= inj_p0) {
-             p_ext = p_int;
-             s_ext[UTEMP] = inj_t0 * pow((p_ext / inj_p0),(gamma-1)/gamma);
-             vy_in = 0;
-             s_ext[UMX] = rho * vx_in;
-             s_ext[UMY] = rho * vy_in; // keep zero
-             s_ext[UMZ] = rho * vz_in;
-             s_ext[UEDEN] = s_ext[UEINT] +
+            p_ext = p_int;
+            s_ext[UTEMP] = inj_t0 * pow((p_ext / inj_p0),(gamma-1)/gamma);
+            // massfrac_ext[N2_ID] = 0.77;
+            // massfrac_ext[O2_ID] = 0.23;
+            // massfrac_ext[H2_ID] = 0.0;
+            eos.PYT2RE(p_ext, massfrac_int, s_ext[UTEMP], rho, eint);
+            s_ext[URHO] = rho;
+            for (int n = 0; n < NUM_SPECIES; n++) {
+              s_ext[UFS + n] = rho * massfrac_int[n];
+            }
+            vy_in = 0;
+            s_ext[UMX] = rho * vx_in;
+            s_ext[UMY] = rho * vy_in; // keep zero
+            s_ext[UMZ] = rho * vz_in;
+            s_ext[UEINT] = rho * eint;
+            s_ext[UEDEN] = s_ext[UEINT] +
               0.5 * rho * (vx_in * vx_in + vy_in * vy_in + vz_in * vz_in);
           }
           // subsonic injection
@@ -234,9 +243,9 @@ bcnormal(
               massfrac_ext[N2_ID] = 0.7451;
               massfrac_ext[O2_ID] = 0.2264;
               massfrac_ext[H2_ID] = 0.0285;
-          amrex::Real sum = 0.0;
               //eos.PYT2RE(prob_parm.reac_pres, massfrac_ext, s_ext[UTEMP], rho, eint);
               eos.PYT2RE(p_ext, massfrac_ext, s_ext[UTEMP], rho, eint);
+              s_ext[URHO] = rho;
               for (int n = 0; n < NUM_SPECIES; n++) {
                 s_ext[UFS + n] = rho * massfrac_ext[n];
               }
@@ -255,6 +264,7 @@ bcnormal(
               massfrac_ext[O2_ID] = 0.2264;
               massfrac_ext[H2_ID] = 0.0285;
               eos.PYT2RE(p_ext, massfrac_ext, s_ext[UTEMP], rho, eint);
+              s_ext[URHO] = rho;
               for (int n = 0; n < NUM_SPECIES; n++) {
                 s_ext[UFS + n] = rho * massfrac_ext[n];
               }
@@ -302,9 +312,6 @@ if (idir == 1) {
         gamma = Cp/Cv;
         // calculate pressure on the inside from known values
         eos.RTY2P(s_int[URHO], s_int[UTEMP], massfrac_int, p_int);
-      // else if (p_int/p_ext > 2) {
-      //    p_ext = prob_parm.p_outlet * 2;
-      //  }
         // calculate stagnation speed of sound, density, and temperature
         amrex::Real R = Cp - Cv;
         amrex::Real mach = vel / c0;
@@ -312,6 +319,7 @@ if (idir == 1) {
         amrex::Real rho, eint, temp_ext;
         // interpolate value for rho
         rho = s_int[URHO] + (p_ext - p_int)/(c0*c0);
+        //s_ext[URHO] = 2 * rho - s_int[URHO];
         s_ext[URHO] = rho;
         // set mass fractions equal to inside now we have density
         for (int n = 0; n < NUM_SPECIES; n++) {
@@ -324,6 +332,9 @@ if (idir == 1) {
         s_ext[UEINT] = rho * eint;
 
         // interpolate values for the velocities
+        // s_ext[UMX] =  rho * (2 * ((s_int[UMX]/ s_int[URHO] + 0 * (p_int - p_ext)/(rho0*c0))) - s_int[UMX]/ s_int[URHO]);
+        // s_ext[UMY] = rho * (2 * ((s_int[UMY]/ s_int[URHO] + 0 * (p_int - p_ext)/(rho0*c0))) - s_int[UMY]/ s_int[URHO]);
+        // s_ext[UMZ] =rho * (2 * ((s_int[UMZ]/ s_int[URHO] + 0 * (p_int - p_ext)/(rho0*c0))) - s_int[UMZ]/ s_int[URHO]);
         s_ext[UMX] = rho * (s_int[UMX]/ s_int[URHO] + 0 * (p_int - p_ext)/(rho0*c0));
         s_ext[UMY] = rho * (s_int[UMY]/ s_int[URHO] + (p_int - p_ext)/(rho0*c0));
         s_ext[UMZ] = rho * (s_int[UMZ]/ s_int[URHO] + 0 * (p_int - p_ext)/(rho0*c0));
