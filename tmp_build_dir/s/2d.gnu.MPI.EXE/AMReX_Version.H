@@ -1,9 +1,9 @@
 #ifndef AMREX_VERSION_H_
 #define AMREX_VERSION_H_
 #ifndef AMREX_GIT_VERSION
-#define AMREX_GIT_VERSION "24.11-1-g00e6f755affd"
+#define AMREX_GIT_VERSION "24.09-6-gde4dc974dda7-dirty"
 #endif
 #ifndef AMREX_RELEASE_NUMBER
-#define AMREX_RELEASE_NUMBER 241100
+#define AMREX_RELEASE_NUMBER 240900
 #endif
 #endif // AMREX_VERSION_H_

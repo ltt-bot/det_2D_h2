@@ -1,4 +1,9 @@
 *.txt
 *.out
 *.ex
+tmp_build_dir/*
 tmp_build_dir/
+PeleC2d.gnu.MPI.ex
+PeleC3d.gnu.MPI.ex
+PeleC2d.gnu.ex
+PeleC3d.gnu.ex
