@@ -17,7 +17,7 @@ struct ProbParmDevice
   amrex::Real inj_t0 = 298.15; 
   int inject_fuel = 1;
   amrex::Real num_inlet = 60;
-  amrex::Real inj_R = 8.31446261815324e+07/(0.147*31.998 + 0.297*2.016 + 0.556*28.014);
+  //amrex::Real inj_R = 8.31446261815324e+07/(0.147*31.998 + 0.297*2.016 + 0.556*28.014);
   amrex::Real p_outlet = 1013250.0*1;
   amrex::Real relax = 3;
 };

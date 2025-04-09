@@ -16,7 +16,8 @@ geometry.prob_hi     =  15  5
 #amr.n_cell          =  256 64 32
 #amr.n_cell          =  512 128 64
 #amr.n_cell          =  1024 32 32
-amr.n_cell           =  1200 400
+amr.n_cell           =   600 200
+#amr.n_cell           =  1200 400
 amr.blocking_factor  =  8
 
 # >>>>>>>>>>>>>  BC KEYWORDS <<<<<<<<<<<<<<<<<<<<<<
@@ -32,10 +33,11 @@ pelec.diffuse_temp = 1
 pelec.diffuse_spec = 1
 pelec.diffuse_enth = 1
 pelec.do_react = 1
-pelec.do_mol = 1
+pelec.do_mol = 0
 pelec.ppm_type = 1
-pelec.use_hybrid_weno = true
+pelec.use_hybrid_weno = false
 pelec.weno_scheme = 1
+pelec.sdc_iters = 2
 pelec.chem_integrator="ReactorCvode"
 cvode.solve_type = "GMRES"
 
@@ -61,12 +63,12 @@ amr.max_grid_size   = 16
 
 # CHECKPOINT FILES
 amr.checkpoint_files_output = 1
-amr.check_file      = ../../../../../../scratch/gpfs/MUELLER/ltt/Hydrogen/2D/chk/amr_1act/chk_h      # root name of checkpoint file
+amr.check_file      = ../../../../../../scratch/gpfs/MUELLER/jb5027/rde/test/chk     # root name of checkpoint file
 amr.check_int       = 10000        # number of timesteps between checkpoints
 
 # PLOTFILES
 amr.plot_files_output = 1
-amr.plot_file       = ../../../../../../scratch/gpfs/MUELLER/ltt/Hydrogen/2D/plt/amr_1act/plt_h    # root name of plotfile
+amr.plot_file       = ../../../../../../scratch/gpfs/MUELLER/jb5027/rde/test/plt    # root name of plotfile
 amr.plot_int        = 1000        # number of timesteps between plotfiles
 amr.plot_vars  =  density Temp
 amr.derive_plot_vars = x_velocity y_velocity z_velocity magvel magvort pressure eint
