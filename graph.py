@@ -4,19 +4,19 @@ import matplotlib.pyplot as plt
 import sys
 
 start_timestep = 10000
-end_timestep = 78000
+end_timestep = 85000
 #end_timestep  = 22000
-vel = np.zeros((int((end_timestep - start_timestep) / 2000),2))
-vel_diff = np.zeros((int((end_timestep - start_timestep) / 2000),2))
+vel = np.zeros((int((end_timestep - start_timestep) / 1000),2))
+vel_diff = np.zeros((int((end_timestep - start_timestep) / 1000),2))
 while (start_timestep < end_timestep):
-    file_name = '/scratch/gpfs/MUELLER/ltt/Hydrogen/2D/plt/65_nodiff/plt_h' 
-    f_1 = yt.load(file_name + str(start_timestep))
-    f_2= yt.load(file_name + str(start_timestep + 2000))
+    file_name = '/scratch/gpfs/MUELLER/ltt/Hydrogen/2D/plt/no_diff/plt_h' 
+    f_1 = yt.load(file_name +"{:05d}".format(start_timestep))
+    f_2= yt.load(file_name + "{:05d}".format(start_timestep+1000))
 
-    file_name_diff = '/scratch/gpfs/MUELLER/ltt/Hydrogen/2D/plt/60_inlet/plt_h'
+    file_name_diff = '/projects/MUELLER/ltt/Output/h2_cont0/plt/plt_h'
 
-    f_diff1 = yt.load(file_name_diff + str(start_timestep))
-    f_diff2= yt.load(file_name_diff + str(start_timestep + 2000))
+    f_diff1 = yt.load(file_name_diff + "{:05d}".format(start_timestep))
+    f_diff2= yt.load(file_name_diff + "{:05d}".format(start_timestep+1000))
 
 
     # Get the information needed for the grid
@@ -68,23 +68,30 @@ while (start_timestep < end_timestep):
 
     speed = ((max_index2 - max_index1) * dxmin) / (dt) *(10**-2)
     speed_diff = ((max_index2_diff - max_index1_diff) * dxmin) / (dt_diff) *(10**-2)
-    vel[int((end_timestep - start_timestep) / 2000) - 1,:] = [f_1.current_time, speed]
-    vel_diff[int((end_timestep - start_timestep) / 2000) -1,:] = [f_diff1.current_time, speed_diff]
-    start_timestep = start_timestep + 2000
+    vel[int((end_timestep - start_timestep) / 1000) - 1,:] = [f_1.current_time, speed]
+    vel_diff[int((end_timestep - start_timestep) /1000) -1,:] = [f_diff1.current_time, speed_diff]
+    start_timestep = start_timestep + 1000
 
 ax = plt.figure()
-plt.plot(vel[:,0] * 10**3,vel[:,1], label="No Diffusion")
-plt.plot(vel_diff[:,0]* 10**3,vel_diff[:,1], label="Diffusion")
+plt.plot(vel[:,0] * 10**3,vel[:,1], label="No Diffusion", color="#ea5545")
+plt.plot(vel_diff[:,0]* 10**3,vel_diff[:,1], label="Diffusion", color="#27aeef")
 ax.legend()
 plt.xlabel("Time (ms)")
 plt.ylabel("Velocity (m/s)")
 plt.savefig(f"Velocity_h2.png")
 plt.close()
 
-ax2 = plt.figure()
-plt.boxplot(x=[vel[:,1],vel_diff[:,1]], label=["No Diffusion", "Diffusion"])
-# plt.boxplot(vel_diff[:,1], label="Diffusion")
-ax2.legend()
-plt.ylabel("Velocity (m/s)")
-plt.savefig(f"Velocity_box.png")
+axs = plt.figure()
+colors = ["#ea5545","#27aeef"]
+bplot = plt.boxplot(x=[vel[:,1],vel_diff[:,1]], 
+                 patch_artist=True)
+plt.grid(True, axis='y')
+# fill with colors
+for patch, color in zip(bplot['boxes'], colors):
+    patch.set_facecolor(color)
+for median in bplot['medians']:
+    median.set_color('black')
+plt.xticks([y + 1 for y in range(2)],labels=["Diffusion", "No Diffusion"])
+plt.ylabel('Velocity (m/s)')
+plt.savefig(f"Velocity_box_diff.png")
 plt.close()

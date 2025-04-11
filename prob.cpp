@@ -29,6 +29,7 @@ amrex_probinit(
   pp.query("inj_R", PeleC::h_prob_parm_device->inj_R);
   pp.query("p_outlet", PeleC::h_prob_parm_device->p_outlet);
   pp.query("relax", PeleC::h_prob_parm_device->relax);
+  pp.query("cont_inlet", PeleC::h_prob_parm_device->cont_inlet);
 }
 }
 

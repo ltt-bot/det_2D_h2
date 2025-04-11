@@ -96,12 +96,9 @@ pc_initdata(
           sum+= massfrac[n];
         }
         amrex::Real extra_for_sum_species_check = 1.0 - sum;
-        massfrac[O2_ID] = massfrac[O2_ID] + extra_for_sum_species_check;
-        // velocity[0] = 2836.19e2; // before 2327.5e2 (units in cm/s?) might need to change this
-        // temperature = 3676.76;
-        // pressure = 1899976.032354744e1; // multiply by ten if in Pa (units?)
-        velocity[0] = 1965.1e2; // before 2327.5e2 (units in cm/s?) might need to change this
-        //velocity[0] = 0;
+        massfrac[N2_ID] = massfrac[N2_ID] + extra_for_sum_species_check;
+        //velocity[0] = 1965.1e2; // before 2327.5e2 (units in cm/s?) might need to change this
+        velocity[0] = 0;
         temperature = 2500;
         pressure = 4.053e7; // multiply by ten if in Pa (units?)
         eos.PYT2R(pressure, massfrac, temperature, rho);
@@ -124,7 +121,7 @@ pc_initdata(
             sum+= massfrac[n];
           }
           amrex::Real extra_for_sum_species_check = 1.0 - sum;
-          massfrac[O2_ID] = massfrac[O2_ID] + extra_for_sum_species_check;
+          massfrac[N2_ID] = massfrac[N2_ID] + extra_for_sum_species_check;
           velocity[0] = 0.0;
           temperature = 298.15;
           pressure = 1013250.0;
@@ -187,7 +184,7 @@ bcnormal(
         //  if (x_val<0) {
         //    x_val = max_xval + x_val;
         //  }
-        if ((fmod(abs(x_val), wall_len*5) > wall_len*2) && (x_val > 0)) {
+        if (((fmod(abs(x_val), wall_len*5) > wall_len*2) && (x_val > 0)) || prob_parm.cont_inlet) {
           auto eos = pele::physics::PhysicsType::eos();
           amrex::Real p_int;
           amrex::Real massfrac_int[NUM_SPECIES] = {0.0};
@@ -225,6 +222,10 @@ bcnormal(
             massfrac_ext[N2_ID] = 0.7451;
             massfrac_ext[O2_ID] = 0.2264;
             massfrac_ext[H2_ID] = 0.0285;
+            eos.TY2Cp(s_ext[UTEMP],massfrac_ext,Cp);
+            eos.TY2Cv(s_ext[UTEMP],massfrac_ext,Cv);
+            R = Cp - Cv;
+            gamma = Cp/Cv;
             eos.PYT2RE(p_ext, massfrac_ext, s_ext[UTEMP], rho, eint);
             s_ext[URHO] = rho;
             for (int n = 0; n < NUM_SPECIES; n++) {
@@ -245,6 +246,10 @@ bcnormal(
               massfrac_ext[N2_ID] = 0.7451;
               massfrac_ext[O2_ID] = 0.2264;
               massfrac_ext[H2_ID] = 0.0285;
+              eos.TY2Cp(s_ext[UTEMP],massfrac_ext,Cp);
+              eos.TY2Cv(s_ext[UTEMP],massfrac_ext,Cv);
+              R = Cp - Cv;
+              gamma = Cp/Cv;
               //eos.PYT2RE(prob_parm.reac_pres, massfrac_ext, s_ext[UTEMP], rho, eint);
               eos.PYT2RE(p_ext, massfrac_ext, s_ext[UTEMP], rho, eint);
               s_ext[URHO] = rho;
@@ -265,6 +270,10 @@ bcnormal(
               massfrac_ext[N2_ID] = 0.7451;
               massfrac_ext[O2_ID] = 0.2264;
               massfrac_ext[H2_ID] = 0.0285;
+              eos.TY2Cp(s_ext[UTEMP],massfrac_ext,Cp);
+              eos.TY2Cv(s_ext[UTEMP],massfrac_ext,Cv);
+              R = Cp - Cv;
+              gamma = Cp/Cv;
               eos.PYT2RE(p_ext, massfrac_ext, s_ext[UTEMP], rho, eint);
               s_ext[URHO] = rho;
               for (int n = 0; n < NUM_SPECIES; n++) {
