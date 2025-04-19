@@ -1,7 +1,7 @@
 # ------------------  INPUTS TO MAIN PROGRAM  -------------------
-#stop_time = 0.0015       # simulation time (seconds)
-max_step = 2000          # number of coarse steps after which to stop
-max_wall_time = 0.9     # wall clock time (hours)
+stop_time = 0.0015      # simulation time (seconds)
+#max_step = 2000          # number of coarse steps after which to stop
+max_wall_time = 0.95     # wall clock time (hours)
 #amr.restart      = ../../../../../../scratch/gpfs/MUELLER/ltt/Hydrogen/2D/chk/amr_3cont/chk_h02544
 
 
@@ -61,10 +61,9 @@ amr.v                = 1       # verbosity in Amr.cpp
 #amr.grid_log        = grdlog  # name of grid logging file
 
 # REFINEMENT / REGRIDDING
-amr.max_level       = 0       # maximum level number allowed
+amr.max_level       = 2       # maximum level number allowed
 amr.ref_ratio       = 2 2 2 2 # refinement ratio
 amr.regrid_int      = 2       # how often to regrid
-amr.max_grid_size   = 16
 #amr.n_error_buf     = 2 2 2 2 # number of buffer cells in error est
 
 # CHECKPOINT FILES
@@ -74,8 +73,8 @@ amr.check_int       = 10000        # number of timesteps between checkpoints
 
 # PLOTFILES
 amr.plot_files_output = 1
-amr.plot_file       = ../../../../../../scratch/gpfs/MUELLER/ltt/Hydrogen/2D/plt/diff/plt_h    # root name of plotfile
-amr.plot_int        = 50        # number of timesteps between plotfiles
+amr.plot_file       = ../../../../../../scratch/gpfs/MUELLER/ltt/Hydrogen/2D/plt/amr2/plt_h    # root name of plotfile
+amr.plot_int        = 1000        # number of timesteps between plotfiles
 amr.plot_vars  =  density Temp
 amr.derive_plot_vars = x_velocity y_velocity z_velocity magvel magvort pressure eint
 pelec.plot_rhoy = 0

@@ -52,40 +52,14 @@ pc_initdata(
     amrex::Real yval = geomdata.ProbLo(1) + (amrex::Real(j) + 0.5) * geomdata.CellSize(1);
     // amrex::Real middle_x_val = (geomdata.ProbHi(0) - geomdata.ProbLo(0)) / 2.0;
 
-    // Default to Air
-    massfrac[N2_ID] = 0.767;  
-    massfrac[H_ID] = 0.0;
-    massfrac[O2_ID] = 0.233; 
-    massfrac[O_ID] =  0.0;
-    massfrac[OH_ID] = 0.0;
-    massfrac[H2_ID] = 0.0; 
-    massfrac[H2O_ID] = 0.0;
-    massfrac[HO2_ID] = 0.0;
-    massfrac[H2O2_ID] = 0.0;
-    amrex::Real sum = 0.0;
-    for (int n = 0; n < NUM_SPECIES; n++) {
-      sum+= massfrac[n];
-    }
-    amrex::Real extra_for_sum_species_check = 1.0 - sum;
-    massfrac[H2O_ID] = massfrac[H2O_ID] + extra_for_sum_species_check;
-    
-    velocity[0] = 0.0; // before 2327.5e2 (units in cm/s?) now zero
-    velocity[1] = 0.0;
-    velocity[2] = 0.0;
-
-    temperature = 298.15;
-    pressure = 1013250.0;
-    eos.PYT2R(pressure, massfrac, temperature, rho);
-    eos.RTY2E(rho, temperature, massfrac, eint);
-
-    // Overwrite if in ignition region 
-    if (xval <= 0.1 && yval <= 1.2) {
+    // check if in ignition region
+    if ((xval <= 0.1 && yval <= 1.2) && (xval>0)) {
         // Burned / just water
         //massfrac[N2_ID] = 0.7451;
         massfrac[N2_ID] = 0.7451;
         massfrac[H_ID] = 0.0;
         massfrac[O2_ID] = 0.2264;
-        massfrac[O_ID] = 0.0;         
+        massfrac[O_ID] = 0.0;
         massfrac[OH_ID] = 0.0;
         massfrac[H2_ID] = 0.0285;
         massfrac[H2O_ID] = 0.0;
@@ -104,7 +78,7 @@ pc_initdata(
         eos.PYT2R(pressure, massfrac, temperature, rho);
         eos.RTY2E(rho, temperature, massfrac, eint);
       }
-      else if (xval <= 8 && yval <= 1.2) {
+      else if ((xval <= 8.0 && yval <= 1.2) && (xval>0)) {
         // Unburned stoichiometric
         if (prob_parm.equiv_ratio == 1.0) {
           massfrac[N2_ID] = 0.7451;
@@ -122,7 +96,6 @@ pc_initdata(
           }
           amrex::Real extra_for_sum_species_check = 1.0 - sum;
           massfrac[N2_ID] = massfrac[N2_ID] + extra_for_sum_species_check;
-          velocity[0] = 0.0;
           temperature = 298.15;
           pressure = 1013250.0;
           eos.PYT2R(pressure, massfrac, temperature, rho);
@@ -132,7 +105,34 @@ pc_initdata(
           amrex::Print() << "Only stoichiometric currently supported" << std::endl;
           exit(EXIT_FAILURE);
         }
-      }
+        }
+        else {
+          // Default to Air
+          massfrac[N2_ID] = 0.767;  
+          massfrac[H_ID] = 0.0;
+          massfrac[O2_ID] = 0.233; 
+          massfrac[O_ID] =  0.0;
+          massfrac[OH_ID] = 0.0;
+          massfrac[H2_ID] = 0.0; 
+          massfrac[H2O_ID] = 0.0;
+          massfrac[HO2_ID] = 0.0;
+          massfrac[H2O2_ID] = 0.0;
+          amrex::Real sum = 0.0;
+          for (int n = 0; n < NUM_SPECIES; n++) {
+            sum+= massfrac[n];
+          }
+          amrex::Real extra_for_sum_species_check = 1.0 - sum;
+          massfrac[N2_ID] = massfrac[N2_ID] + extra_for_sum_species_check;
+          
+          velocity[0] = 0.0; // before 2327.5e2 (units in cm/s?) now zero
+          velocity[1] = 0.0;
+          velocity[2] = 0.0;
+
+          temperature = 298.15;
+          pressure = 1013250.0;
+          eos.PYT2R(pressure, massfrac, temperature, rho);
+          eos.RTY2E(rho, temperature, massfrac, eint);
+        }
     // Set the state
     state(i, j, k, URHO) = rho;
     state(i, j, k, UMX) = rho * velocity[0];
@@ -145,7 +145,7 @@ pc_initdata(
     );
     state(i, j, k, UTEMP) = temperature;
     for (int n = 0; n < NUM_SPECIES; n++) {
-      state(i, j, k, UFS + n) = rho * massfrac[n];
+      state(i, j, k, UFS + n) = fabs(rho * massfrac[n]);
     }
   }
 
@@ -180,10 +180,9 @@ bcnormal(
         amrex::Real wall_len = max_xval/(num_inlet*5);
         amrex::Real x_val = x[0];
         amrex::Real eint;
-        // this is kinda like skipping a time step I think actually - better to just let it default to wall
-        //  if (x_val<0) {
-        //    x_val = max_xval + x_val;
-        //  }
+        if (x_val<0) {
+          x_val = 15 + x_val;
+        }
         if (((fmod(abs(x_val), wall_len*5) > wall_len*2) && (x_val > 0)) || prob_parm.cont_inlet) {
           auto eos = pele::physics::PhysicsType::eos();
           amrex::Real p_int;
@@ -198,9 +197,10 @@ bcnormal(
           amrex::Real vy_in = 0.0;
           amrex::Real vz_in = 0.0;
           amrex::Real rho;
+          amrex::Real sum;
 
           for (int n = 0; n < NUM_SPECIES; n++) {
-            massfrac_int[n] = s_int[UFS + n] / s_int[URHO];
+            massfrac_int[n] = fabs(s_int[UFS + n] / s_int[URHO]);
           }
         
           // calculate pressure on the inside from known values
@@ -208,28 +208,30 @@ bcnormal(
           amrex::Real Cp = 0;
           amrex::Real Cv = 0;
           amrex::Real gamma = 0;
-          eos.TY2Cp(s_int[UTEMP],massfrac_int,Cp);
-          eos.TY2Cv(s_int[UTEMP],massfrac_int,Cv);
+          eos.RTY2Cp(s_int[URHO],s_int[UTEMP],massfrac_int,Cp);
+          eos.RTY2Cv(s_int[URHO],s_int[UTEMP],massfrac_int,Cv);
           gamma = Cp/Cv;
           p_cr = inj_p0*pow(2/(gamma+1),(gamma)/(gamma-1));
           // no injection
           if (p_int >= inj_p0) {
             p_ext = p_int;
             s_ext[UTEMP] = inj_t0 * pow((p_ext / inj_p0),(gamma-1)/gamma);
-            //massfrac_ext[N2_ID] = 0.77;
-            //massfrac_ext[O2_ID] = 0.23;
-            //massfrac_ext[H2_ID] = 0.0;
             massfrac_ext[N2_ID] = 0.7451;
             massfrac_ext[O2_ID] = 0.2264;
             massfrac_ext[H2_ID] = 0.0285;
-            eos.TY2Cp(s_ext[UTEMP],massfrac_ext,Cp);
-            eos.TY2Cv(s_ext[UTEMP],massfrac_ext,Cv);
+            massfrac_ext[H2O_ID] = 0.0; 
+            for (int n = 0; n < NUM_SPECIES; n++) {
+              sum+= massfrac_ext[n];
+            }
+            amrex::Real extra_for_sum_species_check = 1.0 - sum;
+            massfrac_ext[N2_ID] = massfrac_ext[N2_ID] + extra_for_sum_species_check;
+            eos.RTY2Cp(s_ext[URHO],s_ext[UTEMP],massfrac_ext,Cp);
+            eos.RTY2Cv(s_ext[URHO],s_ext[UTEMP],massfrac_ext,Cv);
             R = Cp - Cv;
-            gamma = Cp/Cv;
             eos.PYT2RE(p_ext, massfrac_ext, s_ext[UTEMP], rho, eint);
             s_ext[URHO] = rho;
             for (int n = 0; n < NUM_SPECIES; n++) {
-              s_ext[UFS + n] = rho * massfrac_ext[n];
+              s_ext[UFS + n] = fabs(rho * massfrac_ext[n]);
             }
             vy_in = 0;
             s_ext[UMX] = rho * vx_in;
@@ -240,21 +242,26 @@ bcnormal(
               0.5 * rho * (vx_in * vx_in + vy_in * vy_in + vz_in * vz_in);
           }
           // subsonic injection
-          else if (p_int>p_cr){
+          else if ((inj_p0>p_int )|| (p_int>p_cr)){
               p_ext = p_int;
               s_ext[UTEMP] = inj_t0 * pow((p_ext / inj_p0),(gamma-1)/gamma);
               massfrac_ext[N2_ID] = 0.7451;
               massfrac_ext[O2_ID] = 0.2264;
               massfrac_ext[H2_ID] = 0.0285;
-              eos.TY2Cp(s_ext[UTEMP],massfrac_ext,Cp);
-              eos.TY2Cv(s_ext[UTEMP],massfrac_ext,Cv);
+              massfrac_ext[H2O_ID] = 0.0; 
+              for (int n = 0; n < NUM_SPECIES; n++) {
+                sum+= massfrac_ext[n];
+              }
+              amrex::Real extra_for_sum_species_check = 1.0 - sum;
+              massfrac_ext[N2_ID] = massfrac_ext[N2_ID] + extra_for_sum_species_check;
+              eos.RTY2Cp(s_ext[URHO],s_ext[UTEMP],massfrac_ext,Cp);
+              eos.RTY2Cv(s_ext[URHO],s_ext[UTEMP],massfrac_ext,Cv);
               R = Cp - Cv;
-              gamma = Cp/Cv;
               //eos.PYT2RE(prob_parm.reac_pres, massfrac_ext, s_ext[UTEMP], rho, eint);
               eos.PYT2RE(p_ext, massfrac_ext, s_ext[UTEMP], rho, eint);
               s_ext[URHO] = rho;
               for (int n = 0; n < NUM_SPECIES; n++) {
-                s_ext[UFS + n] = rho * massfrac_ext[n];
+                s_ext[UFS + n] = fabs(rho * massfrac_ext[n]);
               }
               vy_in = sqrt(((2*gamma)/(gamma-1))*R*inj_t0*(1 - pow((p_ext / inj_p0),(gamma-1)/gamma)));
               s_ext[UMX] = rho * vx_in;
@@ -270,14 +277,19 @@ bcnormal(
               massfrac_ext[N2_ID] = 0.7451;
               massfrac_ext[O2_ID] = 0.2264;
               massfrac_ext[H2_ID] = 0.0285;
-              eos.TY2Cp(s_ext[UTEMP],massfrac_ext,Cp);
-              eos.TY2Cv(s_ext[UTEMP],massfrac_ext,Cv);
+              massfrac_ext[H2O_ID] = 0.0;
+              for (int n = 0; n < NUM_SPECIES; n++) {
+                sum+= massfrac_ext[n];
+              }
+              amrex::Real extra_for_sum_species_check = 1.0 - sum;
+              massfrac_ext[N2_ID] = massfrac_ext[N2_ID] + extra_for_sum_species_check;
+              eos.RTY2Cp(s_ext[URHO],s_ext[UTEMP],massfrac_ext,Cp);
+              eos.RTY2Cv(s_ext[URHO],s_ext[UTEMP],massfrac_ext,Cv);
               R = Cp - Cv;
-              gamma = Cp/Cv;
               eos.PYT2RE(p_ext, massfrac_ext, s_ext[UTEMP], rho, eint);
               s_ext[URHO] = rho;
               for (int n = 0; n < NUM_SPECIES; n++) {
-                s_ext[UFS + n] = rho * massfrac_ext[n];
+                s_ext[UFS + n] = fabs(rho * massfrac_ext[n]);
               }
               vy_in = sqrt(((2*gamma)/(gamma+1))*R*inj_t0);
               s_ext[UMX] = rho * vx_in;
@@ -311,7 +323,7 @@ if (idir == 1) {
       }
       eos.RTY2Cs(s_int[URHO], s_int[UTEMP], massfrac_int, c);
       for (int n = 0; n < NUM_SPECIES; n++) {
-        massfrac_ext[n] = massfrac_int[n];
+        massfrac_ext[n] = fabs(massfrac_int[n]);
       }
       //amrex::Real vel = sqrt((s_int[UEDEN] - s_int[UEINT])/(0.5 * s_int[URHO])); // find the overall velocity
       amrex::Real vel = sqrt((s_int[UMX]/s_int[URHO]) * (s_int[UMX]/s_int[URHO])   + (s_int[UMY]/s_int[URHO])  * (s_int[UMY]/s_int[URHO])  + (s_int[UMZ]/s_int[URHO]) * (s_int[UMZ]/s_int[URHO]) ) ; // find the overall velocity
@@ -319,8 +331,8 @@ if (idir == 1) {
         amrex::Real Cp = 0;
         amrex::Real Cv = 0;
         amrex::Real gamma = 0;
-        eos.TY2Cp(s_int[UTEMP],massfrac_int,Cp);
-        eos.TY2Cv(s_int[UTEMP],massfrac_int,Cv);
+        eos.RTY2Cp(s_int[URHO],s_int[UTEMP],massfrac_int,Cp);
+        eos.RTY2Cv(s_int[URHO],s_int[UTEMP],massfrac_int,Cv);
         gamma = Cp/Cv;
         // calculate pressure on the inside from known values
         eos.RTY2P(s_int[URHO], s_int[UTEMP], massfrac_int, p_int);
@@ -338,7 +350,7 @@ if (idir == 1) {
         s_ext[URHO] = rho;
         // set mass fractions equal to inside now we have density
         for (int n = 0; n < NUM_SPECIES; n++) {
-            s_ext[UFS + n] = rho * massfrac_ext[n];
+            s_ext[UFS + n] = fabs(rho * massfrac_ext[n]);
         }
         // find temperature and energy from our known values
         eos.RYP2T(rho, massfrac_ext, p_ext, temp_ext);
@@ -366,7 +378,7 @@ if (idir == 1) {
       s_ext[UMZ] = s_int[UMZ];
       s_ext[UEDEN] = s_int[UEDEN];
       for (int n = 0; n < NUM_SPECIES; n++) {
-        s_ext[UFS + n] =  s_int[URHO] * massfrac_int[n];
+        s_ext[UFS + n] =  fabs(s_int[URHO] * massfrac_int[n]);
       }
     }
     }

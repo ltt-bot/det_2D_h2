@@ -4,10 +4,10 @@ import matplotlib.pyplot as plt
 import sys
 
 #fil = yt.load('/scratch/gpfs/MUELLER/ltt/Methane/2D/plt/plt_2D05554')
-fil = yt.load('/scratch/gpfs/MUELLER/ltt/Hydrogen/2D/plt/amr_1act/plt_h32753')
+fil = yt.load('/scratch/gpfs/MUELLER/ltt/Hydrogen/2D/plt/60_amr2/plt_h01000')
 
 lo =  np.array([0.0, 0.0,0.])
-hi = np.array([15.0, 5.0,0.0125])
+hi = np.array([15.0, 5.0,0.025])
 max_level = fil.index.max_level 
 dxmin = fil.index.get_smallest_dx()
 dxmax = dxmin*2.0*2.0 # if amr level 2
@@ -23,11 +23,13 @@ x_vel     = np.array(first["x_velocity"])
 y_vel     = np.array(first["y_velocity"])
 z_vel     = np.array(first["z_velocity"])
 h2     = np.array(first["Y(H2)"])
+h2o     = np.array(first["Y(H2O)"])
 
-print("Pressure: ",pres_1[732:738,0,0])
-print("Temperature: ",temp_1[732:738,0,0])
-print("X Velocity: ",x_vel[732:738,0,0])
-print("Y Velocity: ",y_vel[732:738,0,0])
-print("Z Velocity: ",z_vel[732:738,0,0])
-print("Y(H2): ",h2[732:738,0,0])
-#print("Temperature: ",np.where(np.isnan(temp_1)))
+print("Pressure: ",pres_1[744:749,13:17,0])
+print("Temperature: ",temp_1[744:749,13:17,0])
+print("X Velocity: ",x_vel[744:749,13:17,0])
+print("Y Velocity: ",y_vel[744:749,13:17,0])
+print("Z Velocity: ",z_vel[744:749,13:17,0])
+print("Y(H2): ",h2[744:749,13:17,0])
+print("Temperature: ",np.where(np.isnan(temp_1)))
+print("Temperature: ",np.where(h2o < 0))
